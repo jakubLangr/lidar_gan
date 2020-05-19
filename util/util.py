@@ -5,6 +5,14 @@ import numpy as np
 from PIL import Image
 import os
 
+def interval_mapping(image, from_min, from_max, to_min, to_max):
+    # map values from [from_min, from_max] to [to_min, to_max]
+    # image: input array
+    from_range = from_max - from_min
+    to_range = to_max - to_min
+    scaled = np.array((image - from_min) / float(from_range), dtype=float)
+    return to_min + (scaled * to_range)
+
 
 def tensor2im(input_image, imtype=np.uint8):
     """"Converts a Tensor array into a numpy image array.
@@ -22,9 +30,12 @@ def tensor2im(input_image, imtype=np.uint8):
         if image_numpy.shape[0] == 1:  # grayscale to RGB
             image_numpy = np.tile(image_numpy, (3, 1, 1))
 
-        # TODO: this is likely messing with LiDAR data
         image_numpy = (np.transpose(image_numpy, (1, 2, 0)) + 1) / 2.0 * 255.0  # post-processing: tranpose and scaling
     else:  # if it is a numpy array, do nothing
+        # TODO: this is possibly messing with LiDAR data, it does not have to be
+        # image_numpy = (np.transpose(image_numpy, (1, 2, 0)) + 1) / 2.0 * 256.0 - 1 # post-processing: tranpose and scaling
+        # 255 -> 256 and -1 to allow for lidar range [-1,255] <- may need to increase the last one
+        image_numpy = interval_mapping(image_numpy + 1  / 2.0, 0, 255, -1, 75)
         image_numpy = input_image
     return image_numpy.astype(imtype)
 
@@ -48,6 +59,7 @@ def diagnose_network(net, name='network'):
     print(mean)
 
 
+
 def save_image(image_numpy, image_path, aspect_ratio=1.0):
     """Save a numpy image to the disk
 
@@ -56,6 +68,7 @@ def save_image(image_numpy, image_path, aspect_ratio=1.0):
         image_path (str)          -- the path of the image
     """
     # TODO: this is also likely an issue with LiDAR data
+
     image_pil = Image.fromarray(image_numpy)
     h, w, _ = image_numpy.shape
 

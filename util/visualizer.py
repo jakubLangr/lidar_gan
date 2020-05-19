@@ -42,10 +42,11 @@ def save_images(webpage, visuals, image_path, aspect_ratio=1.0, width=256, numpy
             if not os.path.exists(target_dir):
                 os.makedirs(target_dir)
             full_path = f"{target_dir}/{file_name}"
-            im = util.tensor2im(im_data)
-            # image_name = '%s_%s.png' % (name, label)
-            # save_path = os.path.join(image_dir, image_name)
-            util.save_image(im, full_path, aspect_ratio=aspect_ratio)
+            im = util.tensor2im(im_data, imtype=np.float32)
+            # print(im.min(),im.max(), label)
+            # APPARENTLY, the real_A and real_B go out of max but it does not matter
+            full_path.replace('jpg','npz')
+            np.savez_compressed(full_path, im)
             # ims.append(image_name)
             # txts.append(label)
             # links.append(image_name)
