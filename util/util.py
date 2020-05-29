@@ -37,7 +37,7 @@ def tensor2im(input_image, imtype=np.uint8):
         # 255 -> 256 and -1 to allow for lidar range [-1,255] <- may need to increase the last one
         image_numpy = interval_mapping(image_numpy + 1  / 2.0, 0, 255, -1, 75)
         image_numpy = input_image
-    return image_numpy.astype(imtype)
+    return image_numpy.astype(float)
 
 
 def diagnose_network(net, name='network'):

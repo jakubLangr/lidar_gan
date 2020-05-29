@@ -5,7 +5,7 @@ from PIL import Image
 import numpy as np
 import random
 import torch
-
+import zipfile
 
 class NumpyDataset(BaseDataset):
     """
@@ -58,8 +58,14 @@ class NumpyDataset(BaseDataset):
         B_path = self.B_paths[index_B]
 
         # Takes from [bs, res, res, cn] to [bs, cn, res, res]
-        A_img = np.load(A_path, allow_pickle=True)['arr_0'].transpose((2,1,0))
-        B_img = np.load(B_path, allow_pickle=True)['arr_0'].transpose((2,1,0))
+        try:
+            A_img = np.load(A_path, allow_pickle=True)['arr_0'].transpose((2,1,0))
+            B_img = np.load(B_path, allow_pickle=True)['arr_0'].transpose((2,1,0))
+        except Exception as e:
+            print(e)
+            print(A_path, '---', B_path)
+            return self[index+1]
+
 
         A_img = torch.Tensor(A_img).type(dtype=torch.float)
         B_img = torch.Tensor(B_img).type(dtype=torch.float)
