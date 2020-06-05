@@ -95,7 +95,6 @@ def get_transform(opt, params=None, grayscale=False, method=Image.BICUBIC, conve
             transform_list.append(transforms.Lambda(lambda img: __crop(img, params['crop_pos'], opt.crop_size)))
 
     if opt.preprocess == 'resize':
-        import ipdb; ipdb.set_trace()
         transform_list.append(transforms.Lambda(lambda img: __make_power_2(img, base=4, method=method)))
 
     if not opt.no_flip:

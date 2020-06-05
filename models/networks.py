@@ -314,11 +314,13 @@ def cal_gradient_penalty(netD, real_data, fake_data, device, type='mixed', const
 
 class ResnetGenerator(nn.Module):
     """Resnet-based generator that consists of Resnet blocks between a few downsampling/upsampling operations.
+
     We adapt Torch code and idea from Justin Johnson's neural style transfer project(https://github.com/jcjohnson/fast-neural-style)
     """
 
     def __init__(self, input_nc, output_nc, ngf=64, norm_layer=nn.BatchNorm2d, use_dropout=False, n_blocks=6, padding_type='reflect'):
         """Construct a Resnet-based generator
+
         Parameters:
             input_nc (int)      -- the number of channels in input images
             output_nc (int)     -- the number of channels in output images
@@ -328,6 +330,11 @@ class ResnetGenerator(nn.Module):
             n_blocks (int)      -- the number of ResNet blocks
             padding_type (str)  -- the name of padding layer in conv layers: reflect | replicate | zero
         """
+        k_size_1 = 14
+        k_size_2 = 6
+        p1_size = 1
+        p2_size = 0
+
         assert(n_blocks >= 0)
         super(ResnetGenerator, self).__init__()
         if type(norm_layer) == functools.partial:
@@ -336,14 +343,14 @@ class ResnetGenerator(nn.Module):
             use_bias = norm_layer == nn.InstanceNorm2d
 
         model = [nn.ReflectionPad2d(3),
-                 nn.Conv2d(input_nc, ngf, kernel_size=7, padding=0, bias=use_bias),
+                 nn.Conv2d(input_nc, ngf, kernel_size=k_size_1, padding=p2_size, bias=use_bias),
                  norm_layer(ngf),
                  nn.ReLU(True)]
 
         n_downsampling = 2
         for i in range(n_downsampling):  # add downsampling layers
             mult = 2 ** i
-            model += [nn.Conv2d(ngf * mult, ngf * mult * 2, kernel_size=3, stride=2, padding=1, bias=use_bias),
+            model += [nn.Conv2d(ngf * mult, ngf * mult * 2, kernel_size=k_size_2, stride=2, padding=p1_size, bias=use_bias),
                       norm_layer(ngf * mult * 2),
                       nn.ReLU(True)]
 
@@ -355,15 +362,16 @@ class ResnetGenerator(nn.Module):
         for i in range(n_downsampling):  # add upsampling layers
             mult = 2 ** (n_downsampling - i)
             model += [nn.ConvTranspose2d(ngf * mult, int(ngf * mult / 2),
-                                         kernel_size=3, stride=2,
-                                         padding=1, output_padding=1,
+                                         kernel_size=k_size_2, stride=2,
+                                         padding=p2_size, output_padding=1,
                                          bias=use_bias),
                       norm_layer(int(ngf * mult / 2)),
                       nn.ReLU(True)]
         model += [nn.ReflectionPad2d(3)]
-        model += [nn.Conv2d(ngf, output_nc, kernel_size=7, padding=0)]
+        model += [nn.Conv2d(ngf, output_nc, kernel_size=k_size_1, padding=4)]
         model += [nn.Tanh()]
 
+        # import ipdb; ipdb.set_trace()
         self.model = nn.Sequential(*model)
 
     def forward(self, input):
